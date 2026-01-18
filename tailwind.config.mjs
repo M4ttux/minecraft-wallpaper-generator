@@ -9,7 +9,10 @@ export default {
           dark: '#1a1a1a',
           gray: '#2a2a2a',
         }
-      }
+      },
+      fontFamily: {
+        minecraftia: ['Minecraftia', 'monospace'],
+      },
     },
   },
   plugins: [],

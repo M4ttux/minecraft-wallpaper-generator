@@ -1,55 +1,68 @@
 ---
-import { categories } from '../data/textures';
+import { categories } from "../data/textures";
 ---
 
 <div class="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-6 h-full">
   <!-- Left Panel: Texture Selection -->
-  <div class="bg-minecraft-gray rounded-lg border-2 border-gray-700 p-6 flex flex-col overflow-hidden">
-    <h2 class="text-2xl font-bold text-minecraft-green mb-4">Minecraft</h2>
-    
+  <div
+    class="bg-minecraft-gray rounded border-2 border-gray-700 p-6 flex flex-col overflow-hidden"
+  >
     <!-- Loading indicator -->
     <div id="loadingIndicator" class="text-center py-4 text-gray-400">
       Loading textures...
     </div>
-    
+
     <!-- Search Bar -->
-    <div class="mb-4 hidden" id="searchContainer">
+    <div class="mb-4 hidden relative" id="searchContainer">
       <input
         type="text"
         id="searchInput"
-        placeholder="Search textures..."
-        class="w-full bg-minecraft-dark text-white px-4 py-2 rounded border border-gray-600 focus:border-minecraft-green outline-none"
+        placeholder="Search..."
+        class="w-full bg-minecraft-dark text-white px-4 py-2 pr-10 rounded border border-gray-600 focus:border-minecraft-green outline-none"
+      />
+      <img 
+        src="/search-icon.svg" 
+        alt="Search" 
+        class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50 pointer-events-none"
       />
     </div>
-    
+
     <!-- Category Filter -->
-    <div class="mb-4 flex flex-wrap gap-2 hidden" id="categoryContainer">
-      {categories.map((cat) => (
-        <button
-          class="category-btn px-3 py-1 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded text-sm transition-colors"
-          data-category={cat.id}
-        >
-          {cat.name}
-        </button>
-      ))}
+    <div class="mb-4 flex flex-wrap gap-2" id="categoryContainer">
+      {
+        categories.map((cat) => (
+          <button
+            class="category-btn px-3 py-1 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded text-sm transition-colors"
+            data-category={cat.id}
+          >
+            {cat.name}
+          </button>
+        ))
+      }
     </div>
-    
+
     <!-- Texture count -->
-    <div class="mb-2 flex justify-between items-center text-sm text-gray-400 hidden flex-shrink-0" id="textureCount">
+    <div
+      class="mb-2 flex justify-between items-center text-sm text-gray-400 flex-shrink-0"
+      id="textureCount"
+    >
       <span>
         <span id="visibleCount">0</span> / <span id="totalCount">0</span> textures
       </span>
       <button
         id="resetBtn"
-        class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+        class="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-all font-semibold"
         title="Clear selection"
       >
         Reset
       </button>
     </div>
-    
+
     <!-- Texture Grid -->
-    <div class="overflow-y-auto overflow-x-hidden p-2 bg-gray-800 rounded-lg flex-1 min-h-0" id="textureGridContainer">
+    <div
+      class="overflow-y-auto overflow-x-hidden p-2 bg-gray-800 rounded flex-1 min-h-0"
+      id="textureGridContainer"
+    >
       <div class="grid grid-cols-5 gap-2 relative" id="textureGrid">
         <!-- Textures will be loaded dynamically -->
       </div>
@@ -59,21 +72,20 @@ import { categories } from '../data/textures';
   <!-- Right Panel: Preview and Settings -->
   <div class="space-y-6 flex flex-col h-full overflow-y-auto">
     <!-- Preview -->
-    <div class="bg-minecraft-gray rounded-lg border-2 border-gray-700 p-6">
-      <div class="minecraft-border preview-bg rounded flex items-center justify-center overflow-hidden">
-        <canvas
-          id="previewCanvas"
-          class="w-full h-full"
-        ></canvas>
+    <div class="bg-minecraft-gray rounded border-2 border-gray-700 p-6">
+      <div
+        class="minecraft-border preview-bg rounded flex items-center justify-center overflow-hidden"
+      >
+        <canvas id="previewCanvas" class="w-full h-full"></canvas>
       </div>
     </div>
-    
+
     <!-- Settings -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Image Settings -->
-      <div class="bg-minecraft-gray rounded-lg border-2 border-gray-700 p-6">
-        <h3 class="text-xl font-bold mb-4">Image Settings</h3>
-        
+      <div class="bg-minecraft-gray rounded border-2 border-gray-700 p-6">
+        <h2 class="text-xl font-bold mb-4">Image Settings</h2>
+
         <div class="space-y-4">
           <div>
             <label class="block text-sm mb-2">Texture Scale</label>
@@ -90,35 +102,68 @@ import { categories } from '../data/textures';
               <span id="scaleValue">600</span>%
             </div>
           </div>
-          
+
           <div>
             <label class="block text-sm mb-2">Image Resolution</label>
             <div class="grid grid-cols-3 gap-2">
-              <button class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded" data-width="854" data-height="480">480p</button>
-              <button class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded" data-width="1280" data-height="720">720p</button>
-              <button class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded" data-width="1920" data-height="1080">1080p</button>
-              <button class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 minecraft-border" data-width="2560" data-height="1440">2K</button>
-              <button class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded" data-width="3840" data-height="2160">4K</button>
-              <button class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded" data-width="7680" data-height="4320">8K</button>
+              <button
+                class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded"
+                data-width="854"
+                data-height="480">480p</button
+              >
+              <button
+                class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded"
+                data-width="1280"
+                data-height="720">720p</button
+              >
+              <button
+                class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded"
+                data-width="1920"
+                data-height="1080">1080p</button
+              >
+              <button
+                class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 minecraft-border"
+                data-width="2560"
+                data-height="1440">2K</button
+              >
+              <button
+                class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded"
+                data-width="3840"
+                data-height="2160">4K</button
+              >
+              <button
+                class="resolution-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded"
+                data-width="7680"
+                data-height="4320">8K</button
+              >
             </div>
           </div>
         </div>
       </div>
-      
+
       <!-- Export Settings -->
-      <div class="bg-minecraft-gray rounded-lg border-2 border-gray-700 p-6">
-        <h3 class="text-xl font-bold mb-4">Export Settings</h3>
-        
+      <div class="bg-minecraft-gray rounded border-2 border-gray-700 p-6">
+        <h2 class="text-xl font-bold mb-4">Export Settings</h2>
+
         <div class="space-y-4">
           <div>
             <label class="block text-sm mb-2">Image Format</label>
             <div class="grid grid-cols-3 gap-2">
-              <button class="format-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 minecraft-border" data-format="png">PNG</button>
-              <button class="format-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded" data-format="jpg">JPG</button>
-              <button class="format-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded" data-format="webp">WEBP</button>
+              <button
+                class="format-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 minecraft-border"
+                data-format="png">PNG</button
+              >
+              <button
+                class="format-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded"
+                data-format="jpg">JPG</button
+              >
+              <button
+                class="format-btn px-3 py-2 bg-minecraft-dark hover:bg-gray-700 border border-gray-600 rounded"
+                data-format="webp">WEBP</button
+              >
             </div>
           </div>
-          
+
           <button
             id="downloadMainBtn"
             class="w-full minecraft-button rounded text-lg"
@@ -132,297 +177,321 @@ import { categories } from '../data/textures';
 </div>
 
 <script>
-  import type { Texture } from '../data/textures';
-  import { formatTextureName, categorizeTexture } from '../data/textures';
-  
+  import type { Texture } from "../data/textures";
+  import { formatTextureName, categorizeTexture } from "../data/textures";
+
   // State
   let textures: Texture[] = [];
   let selectedTextures: string[] = [];
   let currentScale = 600;
   let currentResolution = { width: 2560, height: 1440 };
-  let currentFormat = 'png';
+  let currentFormat = "png";
   const loadedImages: Map<string, HTMLImageElement> = new Map();
   let isGenerating = false;
-  let currentCategory = 'all';
+  let currentCategory = "all";
   let randomPattern: number[] = []; // Store random pattern for consistency
-  
+
   // Elements
-  const textureGrid = document.getElementById('textureGrid') as HTMLElement;
-  const previewCanvas = document.getElementById('previewCanvas') as HTMLCanvasElement;
-  const ctx = previewCanvas.getContext('2d')!;
-  const scaleSlider = document.getElementById('scaleSlider') as HTMLInputElement;
-  const scaleValue = document.getElementById('scaleValue') as HTMLSpanElement;
-  const searchInput = document.getElementById('searchInput') as HTMLInputElement;
-  const categoryBtns = document.querySelectorAll('.category-btn');
-  const resolutionBtns = document.querySelectorAll('.resolution-btn');
-  const formatBtns = document.querySelectorAll('.format-btn');
-  const downloadBtn = document.getElementById('downloadMainBtn') as HTMLButtonElement;
-  const loadingIndicator = document.getElementById('loadingIndicator') as HTMLElement;
-  const searchContainer = document.getElementById('searchContainer') as HTMLElement;
-  const categoryContainer = document.getElementById('categoryContainer') as HTMLElement;
-  const textureCount = document.getElementById('textureCount') as HTMLElement;
-  const visibleCount = document.getElementById('visibleCount') as HTMLElement;
-  const totalCount = document.getElementById('totalCount') as HTMLElement;
-  const resetBtn = document.getElementById('resetBtn') as HTMLButtonElement;
-  
+  const textureGrid = document.getElementById("textureGrid") as HTMLElement;
+  const previewCanvas = document.getElementById(
+    "previewCanvas",
+  ) as HTMLCanvasElement;
+  const ctx = previewCanvas.getContext("2d")!;
+  const scaleSlider = document.getElementById(
+    "scaleSlider",
+  ) as HTMLInputElement;
+  const scaleValue = document.getElementById("scaleValue") as HTMLSpanElement;
+  const searchInput = document.getElementById(
+    "searchInput",
+  ) as HTMLInputElement;
+  const categoryBtns = document.querySelectorAll(".category-btn");
+  const resolutionBtns = document.querySelectorAll(".resolution-btn");
+  const formatBtns = document.querySelectorAll(".format-btn");
+  const downloadBtn = document.getElementById(
+    "downloadMainBtn",
+  ) as HTMLButtonElement;
+  const loadingIndicator = document.getElementById(
+    "loadingIndicator",
+  ) as HTMLElement;
+  const searchContainer = document.getElementById(
+    "searchContainer",
+  ) as HTMLElement;
+  const categoryContainer = document.getElementById(
+    "categoryContainer",
+  ) as HTMLElement;
+  const textureCount = document.getElementById("textureCount") as HTMLElement;
+  const visibleCount = document.getElementById("visibleCount") as HTMLElement;
+  const totalCount = document.getElementById("totalCount") as HTMLElement;
+  const resetBtn = document.getElementById("resetBtn") as HTMLButtonElement;
+
   // Initialize canvas (leave transparent to show background pattern)
   previewCanvas.width = 960;
   previewCanvas.height = 540;
-  
+
   // Load textures from server
   async function loadTextures() {
     try {
-      const response = await fetch('/api/textures');
+      const response = await fetch("/api/textures");
       const files = await response.json();
-      
+
       textures = files.map((filename: string) => {
-        const id = filename.replace('.png', '');
+        const id = filename.replace(".png", "");
         return {
           id,
           name: formatTextureName(filename),
           category: categorizeTexture(id),
-          image: `/textures/${filename}`
+          image: `/textures/${filename}`,
         };
       });
-      
+
       totalCount.textContent = textures.length.toString();
       renderTextureGrid();
-      
+
       // Show UI elements
-      loadingIndicator.classList.add('hidden');
-      searchContainer.classList.remove('hidden');
-      categoryContainer.classList.remove('hidden');
-      textureCount.classList.remove('hidden');
-      
+      loadingIndicator.classList.add("hidden");
+      searchContainer.classList.remove("hidden");
+      categoryContainer.classList.remove("hidden");
+      textureCount.classList.remove("hidden");
+
       // Initialize first category
       (categoryBtns[0] as HTMLElement).click();
-      
     } catch (error) {
-      console.error('Error loading textures:', error);
-      loadingIndicator.textContent = 'Error loading textures. Make sure textures are in public/textures/';
+      console.error("Error loading textures:", error);
+      loadingIndicator.textContent =
+        "Error loading textures. Make sure textures are in public/textures/";
     }
   }
-  
+
   // Render texture grid
   function renderTextureGrid() {
-    textureGrid.innerHTML = '';
-    
+    textureGrid.innerHTML = "";
+
     let visible = 0;
-    
+
     textures.forEach((texture) => {
-      const button = document.createElement('button');
-      button.className = 'texture-item aspect-square bg-minecraft-dark hover:border-minecraft-green border-2 border-transparent rounded cursor-pointer transition-all relative group overflow-visible';
-      button.setAttribute('data-texture-id', texture.id);
-      button.setAttribute('data-category', texture.category);
-      
+      const button = document.createElement("button");
+      button.className =
+        "texture-item aspect-square bg-minecraft-dark hover:border-minecraft-green border-2 border-transparent rounded cursor-pointer transition-all relative group overflow-visible";
+      button.setAttribute("data-texture-id", texture.id);
+      button.setAttribute("data-category", texture.category);
+
       // Image preview
-      const img = document.createElement('img');
+      const img = document.createElement("img");
       img.src = texture.image;
       img.alt = texture.name;
-      img.className = 'w-full h-full object-cover p-1 pixelated';
-      img.style.imageRendering = 'pixelated';
-      
+      img.className = "w-full h-full object-cover p-1 pixelated";
+      img.style.imageRendering = "pixelated";
+
       // Tooltip on hover (Minecraft style) - moved to body to prevent clipping
-      const tooltip = document.createElement('div');
-      tooltip.className = 'fixed bg-black bg-opacity-95 border border-minecraft-green px-3 py-1.5 rounded opacity-0 transition-opacity pointer-events-none whitespace-nowrap z-50 text-sm text-white';
+      const tooltip = document.createElement("div");
+      tooltip.className =
+        "fixed bg-black bg-opacity-95 border border-minecraft-green px-3 py-1.5 rounded opacity-0 transition-opacity pointer-events-none whitespace-nowrap z-50 text-sm text-white";
       tooltip.textContent = texture.name;
-      tooltip.style.display = 'none';
-      
+      tooltip.style.display = "none";
+
       // Show/hide tooltip on hover
-      button.addEventListener('mouseenter', (e) => {
+      button.addEventListener("mouseenter", (e) => {
         const rect = button.getBoundingClientRect();
         tooltip.style.left = `${rect.left + rect.width / 2}px`;
         tooltip.style.top = `${rect.bottom + 8}px`;
-        tooltip.style.transform = 'translateX(-50%)';
-        tooltip.style.display = 'block';
+        tooltip.style.transform = "translateX(-50%)";
+        tooltip.style.display = "block";
         document.body.appendChild(tooltip);
-        setTimeout(() => tooltip.style.opacity = '1', 10);
+        setTimeout(() => (tooltip.style.opacity = "1"), 10);
       });
-      
-      button.addEventListener('mouseleave', () => {
-        tooltip.style.opacity = '0';
+
+      button.addEventListener("mouseleave", () => {
+        tooltip.style.opacity = "0";
         setTimeout(() => {
           if (tooltip.parentNode) {
             tooltip.remove();
           }
         }, 200);
       });
-      
+
       // Selected indicator
-      const indicator = document.createElement('div');
-      indicator.className = 'selected-indicator hidden absolute inset-0 minecraft-border rounded pointer-events-none';
-      
+      const indicator = document.createElement("div");
+      indicator.className =
+        "selected-indicator hidden absolute inset-0 minecraft-border rounded pointer-events-none";
+
       button.appendChild(img);
       button.appendChild(indicator);
-      
+
       // Click handler
-      button.addEventListener('click', () => {
+      button.addEventListener("click", () => {
         if (selectedTextures.includes(texture.id)) {
-          selectedTextures = selectedTextures.filter(id => id !== texture.id);
-          indicator.classList.add('hidden');
-          button.classList.remove('border-minecraft-green');
+          selectedTextures = selectedTextures.filter((id) => id !== texture.id);
+          indicator.classList.add("hidden");
+          button.classList.remove("border-minecraft-green");
         } else {
           selectedTextures.push(texture.id);
-          indicator.classList.remove('hidden');
-          button.classList.add('border-minecraft-green');
+          indicator.classList.remove("hidden");
+          button.classList.add("border-minecraft-green");
         }
         generateRandomPattern();
         updatePreview();
       });
-      
+
       textureGrid.appendChild(button);
       visible++;
     });
-    
+
     visibleCount.textContent = visible.toString();
   }
-  
+
   // Filter textures
   function filterTextures() {
     const search = searchInput.value.toLowerCase();
-    const items = document.querySelectorAll('.texture-item');
+    const items = document.querySelectorAll(".texture-item");
     let visible = 0;
-    
+
     items.forEach((item) => {
-      const textureId = item.getAttribute('data-texture-id')!;
-      const texture = textures.find(t => t.id === textureId);
-      const category = item.getAttribute('data-category')!;
-      
-      const matchesSearch = texture?.name.toLowerCase().includes(search) || textureId.includes(search);
-      const matchesCategory = currentCategory === 'all' || category === currentCategory;
-      
+      const textureId = item.getAttribute("data-texture-id")!;
+      const texture = textures.find((t) => t.id === textureId);
+      const category = item.getAttribute("data-category")!;
+
+      const matchesSearch =
+        texture?.name.toLowerCase().includes(search) ||
+        textureId.includes(search);
+      const matchesCategory =
+        currentCategory === "all" || category === currentCategory;
+
       if (matchesSearch && matchesCategory) {
-        (item as HTMLElement).style.display = '';
+        (item as HTMLElement).style.display = "";
         visible++;
       } else {
-        (item as HTMLElement).style.display = 'none';
+        (item as HTMLElement).style.display = "none";
       }
     });
-    
+
     visibleCount.textContent = visible.toString();
   }
-  
+
   // Search functionality
-  
+
   // Reset button
-  resetBtn.addEventListener('click', () => {
+  resetBtn.addEventListener("click", () => {
     // Clear all selections
     selectedTextures = [];
-    
+
     // Clear search input
-    searchInput.value = '';
-    
+    searchInput.value = "";
+
     // Remove visual indicators
-    const allItems = document.querySelectorAll('.texture-item');
+    const allItems = document.querySelectorAll(".texture-item");
     allItems.forEach((item) => {
-      const indicator = item.querySelector('.selected-indicator') as HTMLElement;
-      indicator.classList.add('hidden');
-      item.classList.remove('border-minecraft-green');
+      const indicator = item.querySelector(
+        ".selected-indicator",
+      ) as HTMLElement;
+      indicator.classList.add("hidden");
+      item.classList.remove("border-minecraft-green");
     });
-    
+
     // Re-filter to show all textures
     filterTextures();
-    
+
     // Clear random pattern and update preview
     randomPattern = [];
     updatePreview();
   });
-  searchInput.addEventListener('input', filterTextures);
-  
+  searchInput.addEventListener("input", filterTextures);
+
   // Category filter
   categoryBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      currentCategory = btn.getAttribute('data-category')!;
-      
+    btn.addEventListener("click", () => {
+      currentCategory = btn.getAttribute("data-category")!;
+
       // Update active button
-      categoryBtns.forEach(b => {
-        b.classList.remove('minecraft-border');
-        b.classList.add('border-gray-600');
+      categoryBtns.forEach((b) => {
+        b.classList.remove("minecraft-border");
+        b.classList.add("border-gray-600");
       });
-      btn.classList.add('minecraft-border');
-      btn.classList.remove('border-gray-600');
-      
+      btn.classList.add("minecraft-border");
+      btn.classList.remove("border-gray-600");
+
       filterTextures();
     });
   });
-  
+
   // Scale slider
-  scaleSlider.addEventListener('input', (e) => {
+  scaleSlider.addEventListener("input", (e) => {
     currentScale = parseInt((e.target as HTMLInputElement).value);
     scaleValue.textContent = currentScale.toString();
     updatePreview();
   });
-  
+
   // Resolution buttons (for download only, not preview)
   resolutionBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const width = parseInt(btn.getAttribute('data-width')!);
-      const height = parseInt(btn.getAttribute('data-height')!);
-      
+    btn.addEventListener("click", () => {
+      const width = parseInt(btn.getAttribute("data-width")!);
+      const height = parseInt(btn.getAttribute("data-height")!);
+
       currentResolution = { width, height };
-      
+
       // Update active button
-      resolutionBtns.forEach(b => {
-        b.classList.remove('minecraft-border');
-        b.classList.add('border-gray-600');
+      resolutionBtns.forEach((b) => {
+        b.classList.remove("minecraft-border");
+        b.classList.add("border-gray-600");
       });
-      btn.classList.add('minecraft-border');
-      btn.classList.remove('border-gray-600');
+      btn.classList.add("minecraft-border");
+      btn.classList.remove("border-gray-600");
     });
   });
-  
+
   // Format buttons
   formatBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      currentFormat = btn.getAttribute('data-format')!;
-      
+    btn.addEventListener("click", () => {
+      currentFormat = btn.getAttribute("data-format")!;
+
       // Update active button
-      formatBtns.forEach(b => {
-        b.classList.remove('minecraft-border');
-        b.classList.add('border-gray-600');
+      formatBtns.forEach((b) => {
+        b.classList.remove("minecraft-border");
+        b.classList.add("border-gray-600");
       });
-      btn.classList.add('minecraft-border');
-      btn.classList.remove('border-gray-600');
+      btn.classList.add("minecraft-border");
+      btn.classList.remove("border-gray-600");
     });
   });
-  
+
   // Load texture image
-  async function loadTextureImage(textureId: string): Promise<HTMLImageElement> {
+  async function loadTextureImage(
+    textureId: string,
+  ): Promise<HTMLImageElement> {
     if (loadedImages.has(textureId)) {
       return loadedImages.get(textureId)!;
     }
-    
+
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
+      img.crossOrigin = "anonymous";
+
       img.onload = () => {
         loadedImages.set(textureId, img);
         resolve(img);
       };
-      
+
       img.onerror = () => {
         // If image fails to load, create a fallback colored square
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = 16;
         canvas.height = 16;
-        const ctx = canvas.getContext('2d')!;
-        
+        const ctx = canvas.getContext("2d")!;
+
         const colors: Record<string, string> = {
-          stone: '#7F7F7F',
-          cobblestone: '#828282',
-          mossy_cobblestone: '#6B826B',
-          stone_bricks: '#7A7A7A',
-          deepslate: '#4A4A4A',
-          obsidian: '#0F0621',
-          bedrock: '#565656',
-          netherrack: '#6B3333',
-          end_stone: '#E3E8A0',
+          stone: "#7F7F7F",
+          cobblestone: "#828282",
+          mossy_cobblestone: "#6B826B",
+          stone_bricks: "#7A7A7A",
+          deepslate: "#4A4A4A",
+          obsidian: "#0F0621",
+          bedrock: "#565656",
+          netherrack: "#6B3333",
+          end_stone: "#E3E8A0",
         };
-        
-        ctx.fillStyle = colors[textureId] || '#7F7F7F';
+
+        ctx.fillStyle = colors[textureId] || "#7F7F7F";
         ctx.fillRect(0, 0, 16, 16);
-        
+
         const fallbackImg = new Image();
         fallbackImg.src = canvas.toDataURL();
         fallbackImg.onload = () => {
@@ -430,135 +499,142 @@ import { categories } from '../data/textures';
           resolve(fallbackImg);
         };
       };
-      
-      const texture = textures.find(t => t.id === textureId);
+
+      const texture = textures.find((t) => t.id === textureId);
       img.src = texture?.image || `/textures/${textureId}.png`;
     });
   }
-  
+
   // Generate random pattern for consistency
   function generateRandomPattern() {
     if (selectedTextures.length === 0) {
       randomPattern = [];
       return;
     }
-    
+
     // Calculate maximum tiles needed for 8K resolution at minimum scale
     const maxTilesX = Math.ceil(7680 / 16) + 1;
     const maxTilesY = Math.ceil(4320 / 16) + 1;
     const totalTiles = maxTilesX * maxTilesY;
-    
+
     // Generate random pattern
     randomPattern = [];
     for (let i = 0; i < totalTiles; i++) {
       randomPattern.push(Math.floor(Math.random() * selectedTextures.length));
     }
   }
-  
+
   // Generate wallpaper
   async function updatePreview() {
     if (selectedTextures.length === 0) {
       ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
       return;
     }
-    
+
     if (isGenerating) return;
     isGenerating = true;
-    
+
     // Load all selected textures
     const textureImages = await Promise.all(
-      selectedTextures.map(id => loadTextureImage(id))
+      selectedTextures.map((id) => loadTextureImage(id)),
     );
-    
+
     // Create temporary canvas at full resolution for accurate preview
-    const tempCanvas = document.createElement('canvas');
+    const tempCanvas = document.createElement("canvas");
     tempCanvas.width = currentResolution.width;
     tempCanvas.height = currentResolution.height;
-    const tempCtx = tempCanvas.getContext('2d')!;
-    
+    const tempCtx = tempCanvas.getContext("2d")!;
+
     // Calculate tile size based on scale
     const baseTileSize = 16; // Minecraft texture base size
     const tileSize = Math.floor((baseTileSize * currentScale) / 100);
-    
+
     const tilesX = Math.ceil(tempCanvas.width / tileSize) + 1;
     const tilesY = Math.ceil(tempCanvas.height / tileSize) + 1;
-    
+
     // Generate pattern on temporary canvas at full resolution
     tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-    
+
     let tileIndex = 0;
     for (let y = 0; y < tilesY; y++) {
       for (let x = 0; x < tilesX; x++) {
         const patternIndex = randomPattern[tileIndex % randomPattern.length];
         const img = textureImages[patternIndex];
-        
+
         tempCtx.imageSmoothingEnabled = false;
         tempCtx.drawImage(img, x * tileSize, y * tileSize, tileSize, tileSize);
         tileIndex++;
       }
     }
-    
+
     // Clear preview canvas and draw scaled version
     ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
     ctx.imageSmoothingEnabled = true; // Use smooth scaling for preview
     ctx.drawImage(tempCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
-    
+
     isGenerating = false;
   }
-  
+
   // Download
-  downloadBtn.addEventListener('click', async () => {
+  downloadBtn.addEventListener("click", async () => {
     if (selectedTextures.length === 0) {
-      alert('Please select at least one texture');
+      alert("Please select at least one texture");
       return;
     }
-    
+
     // Create temporary canvas at selected resolution
-    const downloadCanvas = document.createElement('canvas');
+    const downloadCanvas = document.createElement("canvas");
     downloadCanvas.width = currentResolution.width;
     downloadCanvas.height = currentResolution.height;
-    const downloadCtx = downloadCanvas.getContext('2d')!;
-    
+    const downloadCtx = downloadCanvas.getContext("2d")!;
+
     // Load all selected textures
     const textureImages = await Promise.all(
-      selectedTextures.map(id => loadTextureImage(id))
+      selectedTextures.map((id) => loadTextureImage(id)),
     );
-    
+
     // Calculate tile size based on scale
     const baseTileSize = 16;
     const tileSize = Math.floor((baseTileSize * currentScale) / 100);
-    
+
     const tilesX = Math.ceil(downloadCanvas.width / tileSize) + 1;
     const tilesY = Math.ceil(downloadCanvas.height / tileSize) + 1;
-    
+
     // Clear canvas (transparent for PNG/WEBP, black for JPG)
     downloadCtx.clearRect(0, 0, downloadCanvas.width, downloadCanvas.height);
-    if (currentFormat === 'jpg') {
-      downloadCtx.fillStyle = '#000000';
+    if (currentFormat === "jpg") {
+      downloadCtx.fillStyle = "#000000";
       downloadCtx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
     }
-    
+
     // Generate pattern (using same random pattern as preview)
     let tileIndex = 0;
     for (let y = 0; y < tilesY; y++) {
       for (let x = 0; x < tilesX; x++) {
         const patternIndex = randomPattern[tileIndex % randomPattern.length];
         const img = textureImages[patternIndex];
-        
+
         downloadCtx.imageSmoothingEnabled = false;
-        downloadCtx.drawImage(img, x * tileSize, y * tileSize, tileSize, tileSize);
+        downloadCtx.drawImage(
+          img,
+          x * tileSize,
+          y * tileSize,
+          tileSize,
+          tileSize,
+        );
         tileIndex++;
       }
     }
-    
+
     // Download
-    const link = document.createElement('a');
-    const mimeType = currentFormat === 'jpg' ? 'image/jpeg' : `image/${currentFormat}`;
+    const link = document.createElement("a");
+    const mimeType =
+      currentFormat === "jpg" ? "image/jpeg" : `image/${currentFormat}`;
     link.download = `minecraft-wallpaper-${currentResolution.width}x${currentResolution.height}.${currentFormat}`;
     link.href = downloadCanvas.toDataURL(mimeType, 0.95);
     link.click();
   });
-  
+
   // Initialize with first category active
   loadTextures();
 </script>

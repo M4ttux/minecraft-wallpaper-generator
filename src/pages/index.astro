@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro';
+import WallpaperGenerator from '../components/WallpaperGenerator.astro';
+---
+
+<Layout title="Minecraft Wallpaper Generator">
+  <main class="h-screen overflow-hidden flex flex-col p-4">
+    <div class="max-w-7xl mx-auto w-full flex flex-col" style="height: calc(100vh - 2rem);">
+      <header class="mb-4 flex-shrink-0">
+        <h1 class="text-4xl font-bold text-minecraft-green mb-2">Minecraft</h1>
+        <p class="text-gray-400">Wallpaper Generator</p>
+      </header>
+      
+      <div class="flex-1 overflow-hidden">
+        <WallpaperGenerator />
+      </div>
+    </div>
+  </main>
+</Layout>

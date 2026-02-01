@@ -73,6 +73,10 @@
         />
       </div>
 
+      <button id="tellraw-download" class="tellraw__button" type="button">
+        Descargar PNG
+      </button>
+
       <p class="tellraw__hint">Listo para agregar más opciones después.</p>
     </section>
 
@@ -94,6 +98,7 @@
   const weightToggle = document.getElementById('tellraw-weight-toggle');
   const previewEl = document.getElementById('tellraw-preview');
   const commandEl = document.getElementById('tellraw-command');
+  const downloadEl = document.getElementById('tellraw-download');
 
   const colorMap = new Map();
   colorButtons.forEach((button) => {
@@ -183,6 +188,69 @@
     segments = mergeSegments(segments);
     renderPreview();
     updateCommand();
+  };
+
+  const renderPng = async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 870;
+    canvas.height = 130;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const paddingX = 20;
+    const maxWidth = canvas.width - paddingX * 2;
+    const maxHeight = canvas.height - 20;
+    const baseFontSize = 32;
+
+    const lineSegments = segments.map((segment) => ({
+      ...segment,
+      text: segment.text.replace(/\n/g, ' '),
+    }));
+
+    let totalWidth = 0;
+    for (const segment of lineSegments) {
+      if (!segment.text) continue;
+      ctx.font = `${segment.bold ? '700' : '400'} ${baseFontSize}px Minecraftia, monospace`;
+      totalWidth += ctx.measureText(segment.text).width;
+    }
+
+    const baseHeight = baseFontSize * 1.25;
+    const scaleX = totalWidth > 0 ? maxWidth / totalWidth : 1;
+    const scaleY = maxHeight / baseHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    const offscreen = document.createElement('canvas');
+    offscreen.width = Math.ceil(totalWidth || 1);
+    offscreen.height = Math.ceil(baseHeight);
+    const offCtx = offscreen.getContext('2d');
+    if (!offCtx) return canvas;
+
+    offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
+    offCtx.textBaseline = 'alphabetic';
+
+    let cursorX = 0;
+    const baselineY = baseFontSize;
+    for (const segment of lineSegments) {
+      if (!segment.text) continue;
+      offCtx.font = `${segment.bold ? '700' : '400'} ${baseFontSize}px Minecraftia, monospace`;
+      offCtx.fillStyle = getHexColor(segment.color);
+      offCtx.fillText(segment.text, cursorX, baselineY);
+      cursorX += offCtx.measureText(segment.text).width;
+    }
+
+    const drawWidth = offscreen.width * scale;
+    const drawHeight = offscreen.height * scale;
+    const drawX = (canvas.width - drawWidth) / 2;
+    const drawY = (canvas.height - drawHeight) / 2;
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(offscreen, drawX, drawY, drawWidth, drawHeight);
+
+    return canvas;
   };
 
   const getSelectionOffsets = () => {
@@ -283,6 +351,15 @@
     updateAll();
   });
 
+  downloadEl?.addEventListener('click', async () => {
+    const canvas = await renderPng();
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = 'tellraw-preview.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+
   messageEl?.addEventListener('select', updateBoldToggleFromSelection);
   messageEl?.addEventListener('keyup', updateBoldToggleFromSelection);
   messageEl?.addEventListener('mouseup', updateBoldToggleFromSelection);
@@ -372,6 +449,21 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .tellraw__button {
+    background: #22c55e;
+    color: #0b0b0f;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .tellraw__button:hover {
+    background: #16a34a;
   }
 
   .tellraw__color-card {

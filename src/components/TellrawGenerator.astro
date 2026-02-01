@@ -91,14 +91,14 @@
 </div>
 
 <script>
-  const messageEl = document.getElementById('tellraw-message');
+  const messageEl = document.getElementById('tellraw-message') as HTMLTextAreaElement | null;
   const colorWrapper = document.getElementById('tellraw-color');
   const colorNameEl = document.getElementById('tellraw-color-name');
   const colorButtons = colorWrapper?.querySelectorAll('.tellraw__color') || [];
-  const weightToggle = document.getElementById('tellraw-weight-toggle');
+  const weightToggle = document.getElementById('tellraw-weight-toggle') as HTMLButtonElement | null;
   const previewEl = document.getElementById('tellraw-preview');
-  const commandEl = document.getElementById('tellraw-command');
-  const downloadEl = document.getElementById('tellraw-download');
+  const commandEl = document.getElementById('tellraw-command') as HTMLInputElement | null;
+  const downloadEl = document.getElementById('tellraw-download') as HTMLButtonElement | null;
 
   const colorMap = new Map();
   colorButtons.forEach((button) => {

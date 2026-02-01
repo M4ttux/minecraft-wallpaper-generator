@@ -1,0 +1,23 @@
+---
+import Layout from '../layouts/Layout.astro';
+import TellrawGenerator from '../components/TellrawGenerator.astro';
+---
+
+<Layout title="Tellraw Generator">
+  <main class="h-screen flex flex-col p-4">
+    <header class="mb-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl text-minecraft-green">/tellraw</h1>
+        <p class="text-gray-400">Generador de mensajes falsos</p>
+      </div>
+
+      <a href="/" class="text-sm text-gray-400 hover:text-white">
+        ← Volver
+      </a>
+    </header>
+
+    <div class="flex-1">
+      <TellrawGenerator />
+    </div>
+  </main>
+</Layout>

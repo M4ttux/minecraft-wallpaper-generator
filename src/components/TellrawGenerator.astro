@@ -1,0 +1,468 @@
+---
+---
+
+<div class="tellraw">
+  <div class="tellraw__header">
+    <div>
+      <h2 class="tellraw__title">/tellraw Generator</h2>
+      <p class="tellraw__subtitle">Crea mensajes falsos con estilo Minecraft.</p>
+    </div>
+  </div>
+
+  <div class="tellraw__grid">
+    <section class="tellraw__panel">
+      <label class="tellraw__label" for="tellraw-message">Mensaje</label>
+      <textarea
+        id="tellraw-message"
+        class="tellraw__input tellraw__textarea"
+        rows="4"
+        placeholder="Escribe tu mensaje"
+      >Hola mundo</textarea>
+
+      <div class="tellraw__row">
+        <div class="tellraw__field">
+          <label class="tellraw__label" for="tellraw-color">Color</label>
+          <div class="tellraw__color-card" id="tellraw-color">
+            <div class="tellraw__color-title">Automático</div>
+            <div class="tellraw__color-grid">
+              <button class="tellraw__color" type="button" data-color="black" data-hex="#000000" style="--swatch: #000000;"></button>
+              <button class="tellraw__color" type="button" data-color="dark_blue" data-hex="#0000AA" style="--swatch: #0000AA;"></button>
+              <button class="tellraw__color" type="button" data-color="dark_green" data-hex="#00AA00" style="--swatch: #00AA00;"></button>
+              <button class="tellraw__color" type="button" data-color="dark_aqua" data-hex="#00AAAA" style="--swatch: #00AAAA;"></button>
+              <button class="tellraw__color" type="button" data-color="dark_red" data-hex="#AA0000" style="--swatch: #AA0000;"></button>
+              <button class="tellraw__color" type="button" data-color="dark_purple" data-hex="#AA00AA" style="--swatch: #AA00AA;"></button>
+              <button class="tellraw__color" type="button" data-color="gold" data-hex="#FFAA00" style="--swatch: #FFAA00;"></button>
+              <button class="tellraw__color" type="button" data-color="gray" data-hex="#AAAAAA" style="--swatch: #AAAAAA;"></button>
+
+              <button class="tellraw__color" type="button" data-color="dark_gray" data-hex="#555555" style="--swatch: #555555;"></button>
+              <button class="tellraw__color" type="button" data-color="blue" data-hex="#5555FF" style="--swatch: #5555FF;"></button>
+              <button class="tellraw__color" type="button" data-color="green" data-hex="#55FF55" style="--swatch: #55FF55;"></button>
+              <button class="tellraw__color" type="button" data-color="aqua" data-hex="#55FFFF" style="--swatch: #55FFFF;"></button>
+              <button class="tellraw__color" type="button" data-color="red" data-hex="#FF5555" style="--swatch: #FF5555;"></button>
+              <button class="tellraw__color" type="button" data-color="light_purple" data-hex="#FF55FF" style="--swatch: #FF55FF;"></button>
+              <button class="tellraw__color" type="button" data-color="yellow" data-hex="#FFFF55" style="--swatch: #FFFF55;"></button>
+              <button class="tellraw__color is-active" type="button" data-color="white" data-hex="#FFFFFF" aria-pressed="true" style="--swatch: #FFFFFF;"></button>
+            </div>
+            <div class="tellraw__color-footer">
+              <span id="tellraw-color-name">white</span>
+              <span class="tellraw__color-more">Más colores... (1.16+)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tellraw__field">
+          <label class="tellraw__label" for="tellraw-weight-toggle">Weight</label>
+          <button
+            id="tellraw-weight-toggle"
+            class="tellraw__toggle"
+            type="button"
+            aria-pressed="false"
+          >
+            Bold
+          </button>
+        </div>
+      </div>
+
+      <div class="tellraw__field">
+        <label class="tellraw__label" for="tellraw-command">Comando</label>
+        <input
+          id="tellraw-command"
+          class="tellraw__input"
+          type="text"
+          readonly
+        />
+      </div>
+
+      <p class="tellraw__hint">Listo para agregar más opciones después.</p>
+    </section>
+
+    <section class="tellraw__panel">
+      <h3 class="tellraw__label">Preview</h3>
+      <div class="tellraw__preview" id="tellraw-preview">Hola mundo</div>
+      <div class="tellraw__note">
+        Esto es una vista previa estilo Minecraft.
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  const messageEl = document.getElementById('tellraw-message');
+  const colorWrapper = document.getElementById('tellraw-color');
+  const colorNameEl = document.getElementById('tellraw-color-name');
+  const colorButtons = colorWrapper?.querySelectorAll('.tellraw__color') || [];
+  const weightToggle = document.getElementById('tellraw-weight-toggle');
+  const previewEl = document.getElementById('tellraw-preview');
+  const commandEl = document.getElementById('tellraw-command');
+
+  const colorMap = new Map();
+  colorButtons.forEach((button) => {
+    colorMap.set(button.dataset.color, button.dataset.hex || '#FFFFFF');
+  });
+
+  const getHexColor = (colorName) => colorMap.get(colorName) || '#FFFFFF';
+
+  let currentColor = 'white';
+  let currentBold = false;
+
+  const setActiveColor = (colorName) => {
+    currentColor = colorName;
+    colorButtons.forEach((button) => {
+      const isActive = button.dataset.color === colorName;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+    if (colorNameEl) colorNameEl.textContent = colorName;
+  };
+
+  colorButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const colorName = button.dataset.color || 'white';
+      setActiveColor(colorName);
+      applyStyleToSelection({ applyColor: true, applyBold: false });
+    });
+  });
+
+  weightToggle?.addEventListener('click', () => {
+    currentBold = !currentBold;
+    weightToggle.classList.toggle('is-active', currentBold);
+    weightToggle.setAttribute('aria-pressed', currentBold ? 'true' : 'false');
+    applyStyleToSelection({ applyColor: false, applyBold: true });
+  });
+
+  const normalizeSegments = (segments) =>
+    segments.filter((seg) => seg.text.length > 0);
+
+  const mergeSegments = (segments) => {
+    if (segments.length === 0) return [];
+    const merged = [segments[0]];
+    for (let i = 1; i < segments.length; i += 1) {
+      const current = segments[i];
+      const prev = merged[merged.length - 1];
+      if (prev.color === current.color && prev.bold === current.bold) {
+        prev.text += current.text;
+      } else {
+        merged.push({ ...current });
+      }
+    }
+    return merged;
+  };
+
+  let segments = [
+    {
+      text: messageEl?.value ?? '',
+      color: currentColor,
+      bold: currentBold,
+    },
+  ];
+
+  const renderPreview = () => {
+    if (!previewEl) return;
+    previewEl.innerHTML = '';
+    segments.forEach((segment) => {
+      const span = document.createElement('span');
+      span.textContent = segment.text;
+      span.style.color = getHexColor(segment.color);
+      span.style.fontWeight = segment.bold ? '700' : '400';
+      previewEl.appendChild(span);
+    });
+  };
+
+  const updateCommand = () => {
+    if (!commandEl) return;
+    const payload = segments.map((segment) => ({
+      text: segment.text,
+      color: segment.color,
+      ...(segment.bold ? { bold: true } : {}),
+    }));
+    commandEl.value = `/tellraw @p ${JSON.stringify(payload)}`;
+  };
+
+  const updateAll = () => {
+    segments = normalizeSegments(segments);
+    segments = mergeSegments(segments);
+    renderPreview();
+    updateCommand();
+  };
+
+  const getSelectionOffsets = () => {
+    if (!messageEl) return null;
+    const start = messageEl.selectionStart ?? 0;
+    const end = messageEl.selectionEnd ?? 0;
+    if (start === end) return null;
+    return { start: Math.min(start, end), end: Math.max(start, end) };
+  };
+
+  const applyStyleToSelection = ({ applyColor, applyBold }) => {
+    const offsets = getSelectionOffsets();
+    if (!offsets) return false;
+
+    const { start, end } = offsets;
+    const newColor = currentColor;
+    const newBold = currentBold;
+
+    const updated = [];
+    let cursor = 0;
+
+    segments.forEach((segment) => {
+      const segStart = cursor;
+      const segEnd = cursor + segment.text.length;
+      cursor = segEnd;
+
+      if (end <= segStart || start >= segEnd) {
+        updated.push({ ...segment });
+        return;
+      }
+
+      const beforeText = segment.text.slice(0, Math.max(0, start - segStart));
+      const midText = segment.text.slice(
+        Math.max(0, start - segStart),
+        Math.min(segment.text.length, end - segStart)
+      );
+      const afterText = segment.text.slice(Math.min(segment.text.length, end - segStart));
+
+      if (beforeText) {
+        updated.push({ ...segment, text: beforeText });
+      }
+      if (midText) {
+        updated.push({
+          text: midText,
+          color: applyColor ? newColor : segment.color,
+          bold: applyBold ? newBold : segment.bold,
+        });
+      }
+      if (afterText) {
+        updated.push({ ...segment, text: afterText });
+      }
+    });
+
+    segments = mergeSegments(normalizeSegments(updated));
+    updateAll();
+    return true;
+  };
+
+  const updateBoldToggleFromSelection = () => {
+    if (!weightToggle) return;
+    const offsets = getSelectionOffsets();
+    if (!offsets) return;
+
+    const { start, end } = offsets;
+    let cursor = 0;
+    let hasSelected = false;
+    let allBold = true;
+
+    segments.forEach((segment) => {
+      const segStart = cursor;
+      const segEnd = cursor + segment.text.length;
+      cursor = segEnd;
+
+      if (end <= segStart || start >= segEnd) return;
+
+      hasSelected = true;
+      if (!segment.bold) {
+        allBold = false;
+      }
+    });
+
+    if (!hasSelected) return;
+
+    currentBold = allBold;
+    weightToggle.classList.toggle('is-active', currentBold);
+    weightToggle.setAttribute('aria-pressed', currentBold ? 'true' : 'false');
+  };
+
+  messageEl?.addEventListener('input', () => {
+    const baseText = messageEl.value || '';
+    segments = [
+      {
+        text: baseText,
+        color: currentColor,
+        bold: currentBold,
+      },
+    ];
+    updateAll();
+  });
+
+  messageEl?.addEventListener('select', updateBoldToggleFromSelection);
+  messageEl?.addEventListener('keyup', updateBoldToggleFromSelection);
+  messageEl?.addEventListener('mouseup', updateBoldToggleFromSelection);
+
+
+  setActiveColor(currentColor);
+  updateAll();
+</script>
+
+<style>
+  .tellraw {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: #101014;
+    border: 1px solid #2a2a30;
+    border-radius: 16px;
+    padding: 24px;
+    height: 100%;
+  }
+
+  .tellraw__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .tellraw__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .tellraw__subtitle {
+    color: #9ca3af;
+    font-size: 0.95rem;
+  }
+
+  .tellraw__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    flex: 1;
+  }
+
+  .tellraw__panel {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .tellraw__label {
+    font-size: 0.85rem;
+    color: #cbd5f5;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .tellraw__input {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    outline: none;
+  }
+
+  .tellraw__textarea {
+    min-height: 110px;
+    resize: vertical;
+  }
+
+  .tellraw__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .tellraw__field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tellraw__color-card {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tellraw__color-title {
+    font-size: 0.85rem;
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+
+  .tellraw__color-grid {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .tellraw__color {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    border: 2px solid #334155;
+    background: var(--swatch, #ffffff);
+    cursor: pointer;
+    box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35);
+  }
+
+  .tellraw__color[data-hex] {
+    background: var(--swatch);
+  }
+
+  .tellraw__color.is-active {
+    border-color: #e2e8f0;
+    box-shadow: 0 0 0 2px #a855f7, inset 0 0 0 2px rgba(0, 0, 0, 0.35);
+  }
+
+  .tellraw__color-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .tellraw__color-more {
+    color: #cbd5f5;
+    font-weight: 600;
+  }
+
+  .tellraw__toggle {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #e2e8f0;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .tellraw__toggle.is-active {
+    background: #a855f7;
+    border-color: #c4b5fd;
+    color: #0b0b0f;
+  }
+
+
+  .tellraw__preview {
+    flex: 1;
+    background: #0b0b0f;
+    border: 1px solid #2a2a30;
+    border-radius: 12px;
+    padding: 16px;
+    font-family: 'Minecraftia', monospace;
+    font-size: 1rem;
+    min-height: 140px;
+    white-space: pre-wrap;
+  }
+
+  .tellraw__hint,
+  .tellraw__note {
+    font-size: 0.85rem;
+    color: #94a3b8;
+  }
+</style>

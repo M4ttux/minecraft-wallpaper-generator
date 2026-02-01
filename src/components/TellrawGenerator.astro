@@ -407,6 +407,74 @@
     return true;
   };
 
+  const replaceRangeWithSegments = (start, end, insertSegments) => {
+    const left = sliceSegmentsByRange(segments, 0, start);
+    const right = sliceSegmentsByRange(segments, end, segmentsToText(segments).length);
+    segments = mergeSegments(normalizeSegments([...left, ...insertSegments, ...right]));
+    updateAll();
+    if (messageEl) {
+      messageEl.value = segmentsToText(segments);
+      const caret = start + segmentsToText(insertSegments).length;
+      messageEl.setSelectionRange(caret, caret);
+    }
+  };
+
+  const getSelectionRange = () => {
+    if (!messageEl) return null;
+    const start = messageEl.selectionStart ?? 0;
+    const end = messageEl.selectionEnd ?? 0;
+    return { start: Math.min(start, end), end: Math.max(start, end) };
+  };
+
+  const handleCopy = (event) => {
+    const range = getSelectionRange();
+    if (!range || range.start === range.end) return;
+    const selectedSegments = sliceSegmentsByRange(segments, range.start, range.end);
+    const text = segmentsToText(selectedSegments);
+
+    event.clipboardData?.setData('text/plain', text);
+    event.clipboardData?.setData('application/x-tellraw-segments', JSON.stringify(selectedSegments));
+    event.preventDefault();
+  };
+
+  const handleCut = (event) => {
+    const range = getSelectionRange();
+    if (!range || range.start === range.end) return;
+    handleCopy(event);
+    replaceRangeWithSegments(range.start, range.end, []);
+  };
+
+  const handlePaste = (event) => {
+    const range = getSelectionRange();
+    if (!range) return;
+
+    const raw = event.clipboardData?.getData('application/x-tellraw-segments');
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          replaceRangeWithSegments(range.start, range.end, normalizeSegments(parsed));
+          event.preventDefault();
+          return;
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    const plain = event.clipboardData?.getData('text/plain') ?? '';
+    if (plain.length > 0) {
+      replaceRangeWithSegments(range.start, range.end, [
+        {
+          text: plain,
+          color: currentColor,
+          bold: currentBold,
+        },
+      ]);
+      event.preventDefault();
+    }
+  };
+
   const updateBoldToggleFromSelection = () => {
     if (!weightToggle) return;
     const offsets = getSelectionOffsets();
@@ -441,6 +509,10 @@
     const baseText = messageEl.value || '';
     applyTextChange(baseText);
   });
+
+  messageEl?.addEventListener('copy', handleCopy);
+  messageEl?.addEventListener('cut', handleCut);
+  messageEl?.addEventListener('paste', handlePaste);
 
 
 

@@ -248,6 +248,45 @@
     return ranges.map((range) => sliceSegmentsByRange(segments, range.start, range.end));
   };
 
+  const applyTextChange = (newText) => {
+    const oldText = segmentsToText(segments);
+    if (oldText === newText) return;
+
+    let prefix = 0;
+    const minLen = Math.min(oldText.length, newText.length);
+    while (prefix < minLen && oldText[prefix] === newText[prefix]) {
+      prefix += 1;
+    }
+
+    let suffix = 0;
+    while (
+      suffix < minLen - prefix &&
+      oldText[oldText.length - 1 - suffix] === newText[newText.length - 1 - suffix]
+    ) {
+      suffix += 1;
+    }
+
+    const oldEnd = oldText.length - suffix;
+    const newEnd = newText.length - suffix;
+    const newMid = newText.slice(prefix, newEnd);
+
+    const left = sliceSegmentsByRange(segments, 0, prefix);
+    const right = sliceSegmentsByRange(segments, oldEnd, oldText.length);
+
+    const updated = [...left];
+    if (newMid.length > 0) {
+      updated.push({
+        text: newMid,
+        color: currentColor,
+        bold: currentBold,
+      });
+    }
+    updated.push(...right);
+
+    segments = mergeSegments(normalizeSegments(updated));
+    updateAll();
+  };
+
 
   const renderPng = async (renderSegments = segments) => {
     const canvas = document.createElement('canvas');
@@ -400,14 +439,7 @@
 
   messageEl?.addEventListener('input', () => {
     const baseText = messageEl.value || '';
-    segments = [
-      {
-        text: baseText,
-        color: currentColor,
-        bold: currentBold,
-      },
-    ];
-    updateAll();
+    applyTextChange(baseText);
   });
 
 

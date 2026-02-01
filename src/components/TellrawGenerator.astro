@@ -77,6 +77,10 @@
         Descargar PNG
       </button>
 
+      <button id="tellraw-download-all" class="tellraw__button" type="button">
+        Descargar todos
+      </button>
+
       <p class="tellraw__hint">Listo para agregar más opciones después.</p>
     </section>
 
@@ -99,6 +103,7 @@
   const previewEl = document.getElementById('tellraw-preview');
   const commandEl = document.getElementById('tellraw-command') as HTMLInputElement | null;
   const downloadEl = document.getElementById('tellraw-download') as HTMLButtonElement | null;
+  const downloadAllEl = document.getElementById('tellraw-download-all') as HTMLButtonElement | null;
 
   const colorMap = new Map();
   colorButtons.forEach((button) => {
@@ -161,6 +166,8 @@
     },
   ];
 
+  const segmentsToText = (data) => data.map((segment) => segment.text).join('');
+
   const renderPreview = () => {
     if (!previewEl) return;
     previewEl.innerHTML = '';
@@ -189,8 +196,60 @@
     renderPreview();
     updateCommand();
   };
+  const getMessageRanges = (text) => {
+    const ranges = [];
+    const separator = /\n\s*\n+/g;
+    let lastIndex = 0;
+    let match;
 
-  const renderPng = async () => {
+    while ((match = separator.exec(text)) !== null) {
+      const end = match.index;
+      const messageText = text.slice(lastIndex, end);
+      if (messageText.trim().length > 0) {
+        ranges.push({ start: lastIndex, end });
+      }
+      lastIndex = match.index + match[0].length;
+    }
+
+    const tail = text.slice(lastIndex);
+    if (tail.trim().length > 0) {
+      ranges.push({ start: lastIndex, end: text.length });
+    }
+
+    return ranges;
+  };
+
+  const sliceSegmentsByRange = (source, start, end) => {
+    const sliced = [];
+    let cursor = 0;
+
+    source.forEach((segment) => {
+      const segStart = cursor;
+      const segEnd = cursor + segment.text.length;
+      cursor = segEnd;
+
+      if (end <= segStart || start >= segEnd) return;
+
+      const before = Math.max(0, start - segStart);
+      const after = Math.min(segment.text.length, end - segStart);
+      const text = segment.text.slice(before, after);
+      if (text) {
+        sliced.push({ ...segment, text });
+      }
+    });
+
+    return normalizeSegments(sliced);
+  };
+
+  const getMessageSegmentsList = () => {
+    const fullText = segmentsToText(segments);
+    const ranges = getMessageRanges(fullText);
+    if (ranges.length === 0) return [segments];
+    return ranges.map((range) => sliceSegmentsByRange(segments, range.start, range.end));
+  };
+
+
+  const renderPng = async (renderSegments = segments) => {
     const canvas = document.createElement('canvas');
     canvas.width = 870;
     canvas.height = 130;
@@ -206,7 +265,7 @@
     const maxHeight = canvas.height - 20;
     const baseFontSize = 32;
 
-    const lineSegments = segments.map((segment) => ({
+    const lineSegments = renderSegments.map((segment) => ({
       ...segment,
       text: segment.text.replace(/\n/g, ' '),
     }));
@@ -351,13 +410,30 @@
     updateAll();
   });
 
+
+
   downloadEl?.addEventListener('click', async () => {
-    const canvas = await renderPng();
+    const list = getMessageSegmentsList();
+    const canvas = await renderPng(list[0]);
     if (!canvas) return;
     const link = document.createElement('a');
     link.download = 'tellraw-preview.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
+  });
+
+  downloadAllEl?.addEventListener('click', async () => {
+    const list = getMessageSegmentsList();
+    let index = 1;
+    for (const messageSegments of list) {
+      const canvas = await renderPng(messageSegments);
+      if (!canvas) continue;
+      const link = document.createElement('a');
+      link.download = `tellraw-${index}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      index += 1;
+    }
   });
 
   messageEl?.addEventListener('select', updateBoldToggleFromSelection);
@@ -465,6 +541,12 @@
   .tellraw__button:hover {
     background: #16a34a;
   }
+
+  .tellraw__button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
 
   .tellraw__color-card {
     background: #0f172a;

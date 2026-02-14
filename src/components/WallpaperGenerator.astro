@@ -188,6 +188,7 @@ import { categories } from "../data/textures";
   let currentFormat = "png";
   const loadedImages: Map<string, HTMLImageElement> = new Map();
   let isGenerating = false;
+  let pendingPreviewUpdate = false;
   let currentCategory = "all";
   let randomPattern: number[] = []; // Store random pattern for consistency
 
@@ -531,48 +532,86 @@ import { categories } from "../data/textures";
       return;
     }
 
-    if (isGenerating) return;
+    if (isGenerating) {
+      pendingPreviewUpdate = true;
+      return;
+    }
     isGenerating = true;
+    pendingPreviewUpdate = false;
 
-    // Load all selected textures
-    const textureImages = await Promise.all(
-      selectedTextures.map((id) => loadTextureImage(id)),
-    );
+    const selectedTexturesSnapshot = [...selectedTextures];
+    const patternSnapshot = [...randomPattern];
 
-    // Create temporary canvas at full resolution for accurate preview
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = currentResolution.width;
-    tempCanvas.height = currentResolution.height;
-    const tempCtx = tempCanvas.getContext("2d")!;
+    try {
+      // Load all selected textures
+      const textureImages = await Promise.all(
+        selectedTexturesSnapshot.map((id) => loadTextureImage(id)),
+      );
 
-    // Calculate tile size based on scale
-    const baseTileSize = 16; // Minecraft texture base size
-    const tileSize = Math.floor((baseTileSize * currentScale) / 100);
+      if (textureImages.length === 0) {
+        ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        return;
+      }
 
-    const tilesX = Math.ceil(tempCanvas.width / tileSize) + 1;
-    const tilesY = Math.ceil(tempCanvas.height / tileSize) + 1;
+      // Create temporary canvas at full resolution for accurate preview
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = currentResolution.width;
+      tempCanvas.height = currentResolution.height;
+      const tempCtx = tempCanvas.getContext("2d")!;
 
-    // Generate pattern on temporary canvas at full resolution
-    tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+      // Calculate tile size based on scale
+      const baseTileSize = 16; // Minecraft texture base size
+      const tileSize = Math.max(1, Math.floor((baseTileSize * currentScale) / 100));
 
-    let tileIndex = 0;
-    for (let y = 0; y < tilesY; y++) {
-      for (let x = 0; x < tilesX; x++) {
-        const patternIndex = randomPattern[tileIndex % randomPattern.length];
-        const img = textureImages[patternIndex];
+      const tilesX = Math.ceil(tempCanvas.width / tileSize) + 1;
+      const tilesY = Math.ceil(tempCanvas.height / tileSize) + 1;
+      const totalTiles = tilesX * tilesY;
 
-        tempCtx.imageSmoothingEnabled = false;
-        tempCtx.drawImage(img, x * tileSize, y * tileSize, tileSize, tileSize);
-        tileIndex++;
+      const activePattern =
+        patternSnapshot.length > 0 &&
+        patternSnapshot.every((index) => index >= 0 && index < textureImages.length)
+          ? patternSnapshot
+          : Array.from(
+              { length: totalTiles },
+              () => Math.floor(Math.random() * textureImages.length),
+            );
+
+      if (activePattern !== patternSnapshot) {
+        randomPattern = activePattern;
+      }
+
+      // Generate pattern on temporary canvas at full resolution
+      tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+      let tileIndex = 0;
+      for (let y = 0; y < tilesY; y++) {
+        for (let x = 0; x < tilesX; x++) {
+          const patternIndex = activePattern[tileIndex % activePattern.length] ?? 0;
+          const img = textureImages[patternIndex] ?? textureImages[0];
+
+          if (!img) {
+            tileIndex++;
+            continue;
+          }
+
+          tempCtx.imageSmoothingEnabled = false;
+          tempCtx.drawImage(img, x * tileSize, y * tileSize, tileSize, tileSize);
+          tileIndex++;
+        }
+      }
+
+      // Clear preview canvas and draw scaled version
+      ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      ctx.imageSmoothingEnabled = true; // Use smooth scaling for preview
+      ctx.drawImage(tempCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
+    } finally {
+      isGenerating = false;
+
+      if (pendingPreviewUpdate) {
+        pendingPreviewUpdate = false;
+        updatePreview();
       }
     }
-
-    // Clear preview canvas and draw scaled version
-    ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-    ctx.imageSmoothingEnabled = true; // Use smooth scaling for preview
-    ctx.drawImage(tempCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
-
-    isGenerating = false;
   }
 
   // Download
@@ -588,10 +627,18 @@ import { categories } from "../data/textures";
     downloadCanvas.height = currentResolution.height;
     const downloadCtx = downloadCanvas.getContext("2d")!;
 
+    const selectedTexturesSnapshot = [...selectedTextures];
+    const patternSnapshot = [...randomPattern];
+
     // Load all selected textures
     const textureImages = await Promise.all(
-      selectedTextures.map((id) => loadTextureImage(id)),
+      selectedTexturesSnapshot.map((id) => loadTextureImage(id)),
     );
+
+    if (textureImages.length === 0) {
+      alert("Could not load the selected textures");
+      return;
+    }
 
     // Calculate tile size based on scale
     const baseTileSize = 16;
@@ -607,12 +654,27 @@ import { categories } from "../data/textures";
       downloadCtx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
     }
 
+    const totalTiles = tilesX * tilesY;
+    const activePattern =
+      patternSnapshot.length > 0 &&
+      patternSnapshot.every((index) => index >= 0 && index < textureImages.length)
+        ? patternSnapshot
+        : Array.from(
+            { length: totalTiles },
+            () => Math.floor(Math.random() * textureImages.length),
+          );
+
     // Generate pattern (using same random pattern as preview)
     let tileIndex = 0;
     for (let y = 0; y < tilesY; y++) {
       for (let x = 0; x < tilesX; x++) {
-        const patternIndex = randomPattern[tileIndex % randomPattern.length];
-        const img = textureImages[patternIndex];
+        const patternIndex = activePattern[tileIndex % activePattern.length] ?? 0;
+        const img = textureImages[patternIndex] ?? textureImages[0];
+
+        if (!img) {
+          tileIndex++;
+          continue;
+        }
 
         downloadCtx.imageSmoothingEnabled = false;
         downloadCtx.drawImage(
